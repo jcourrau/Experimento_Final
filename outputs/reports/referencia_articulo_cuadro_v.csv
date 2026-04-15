@@ -1,0 +1,5 @@
+Metrica,Valor
+Tasa de inferencia (FPS),28.3 +/- 1.7
+Latencia promedio (ms),34.2 +/- 4.1
+Precision en tiempo real,93.8 %
+Reduccion vs. dataset estatico,-3.5 pp
