@@ -30,7 +30,7 @@
 * Min 24 FPS -> ?
 * Open CV 4.8 -> ?
 * 64 x 64 -> 92 x 92
-* Otsu (umbralización adaptativa) -> ? 
+* Otsu (umbralización adaptativa) -> Se aleja a las imagenes de entrenamiento, descartado. 
 
 ## IV. DISEÑO EXPERIMENTAL
 
