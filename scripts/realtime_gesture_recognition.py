@@ -43,7 +43,17 @@ MODEL_CONFIGS = {
 
 
 class ConvBlock(nn.Module):
+    """Bloque convolucional configurable para las arquitecturas CNN."""
+
     def __init__(self, in_channels: int, out_channels: int, convs: int, use_bn: bool):
+        """Inicializa las capas convolucionales del bloque.
+
+        Args:
+            in_channels: Cantidad de canales de entrada.
+            out_channels: Cantidad de filtros de salida.
+            convs: Cantidad de convoluciones consecutivas en el bloque.
+            use_bn: Indica si se agrega Batch Normalization tras cada convolucion.
+        """
         super().__init__()
 
         layers = []
@@ -58,11 +68,31 @@ class ConvBlock(nn.Module):
         self.block = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Ejecuta el bloque convolucional sobre un tensor.
+
+        Args:
+            x: Tensor de entrada con forma compatible con PyTorch.
+
+        Returns:
+            Tensor transformado por las convoluciones, activaciones y pooling.
+        """
         return self.block(x)
 
 
 class GestureCNN(nn.Module):
+    """Red convolucional para clasificacion de gestos de mano."""
+
     def __init__(self, model_key: str, num_classes: int, image_size: tuple[int, int]):
+        """Inicializa la arquitectura CNN seleccionada.
+
+        Args:
+            model_key: Identificador de arquitectura definido en ``MODEL_CONFIGS``.
+            num_classes: Cantidad de clases de gestos a predecir.
+            image_size: Tamano de imagen esperado como ``(ancho, alto)``.
+
+        Raises:
+            ValueError: Si ``model_key`` no corresponde a una arquitectura conocida.
+        """
         super().__init__()
 
         normalized_key = normalize_model_key(model_key)
@@ -90,6 +120,14 @@ class GestureCNN(nn.Module):
 
     @staticmethod
     def _build_features(blocks: list[dict]) -> nn.Sequential:
+        """Construye el extractor convolucional de caracteristicas.
+
+        Args:
+            blocks: Lista de configuraciones de bloques convolucionales.
+
+        Returns:
+            Secuencia de bloques convolucionales lista para PyTorch.
+        """
         layers = []
         in_channels = 1
 
@@ -107,23 +145,63 @@ class GestureCNN(nn.Module):
         return nn.Sequential(*layers)
 
     def _get_flattened_size(self) -> int:
+        """Calcula la dimension plana que entra al clasificador.
+
+        Returns:
+            Cantidad de caracteristicas despues del extractor convolucional.
+        """
         with torch.no_grad():
             dummy = torch.zeros(1, 1, self.image_size[1], self.image_size[0])
             return self.features(dummy).view(1, -1).shape[1]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Calcula logits de clase para un lote de imagenes.
+
+        Args:
+            x: Tensor de imagenes con forma ``(batch, channels, height, width)``.
+
+        Returns:
+            Tensor de logits con una columna por clase.
+        """
         return self.classifier(self.features(x))
 
 
 def normalize_model_key(model_key: str) -> str:
+    """Normaliza un identificador de modelo.
+
+    Args:
+        model_key: Nombre de modelo escrito con guiones, guiones bajos o espacios.
+
+    Returns:
+        Identificador en mayusculas y con guiones bajos.
+    """
     return model_key.strip().upper().replace("-", "_")
 
 
 def display_model_key(model_key: str) -> str:
+    """Convierte un identificador de modelo al formato de presentacion.
+
+    Args:
+        model_key: Nombre de modelo a mostrar.
+
+    Returns:
+        Nombre normalizado con guiones medios.
+    """
     return normalize_model_key(model_key).replace("_", "-")
 
 
 def parse_image_size(value) -> tuple[int, int]:
+    """Convierte el tamano de imagen del checkpoint a una tupla.
+
+    Args:
+        value: Valor de tamano almacenado en el checkpoint.
+
+    Returns:
+        Tupla ``(ancho, alto)`` usada por OpenCV.
+
+    Raises:
+        ValueError: Si el valor no se puede interpretar como dos enteros.
+    """
     if value is None:
         return DEFAULT_IMAGE_SIZE
     if isinstance(value, torch.Tensor):
@@ -134,10 +212,23 @@ def parse_image_size(value) -> tuple[int, int]:
 
 
 def project_root_from_script() -> Path:
+    """Obtiene la raiz del proyecto desde la ubicacion del script.
+
+    Returns:
+        Ruta absoluta del directorio raiz del repositorio.
+    """
     return Path(__file__).resolve().parents[1]
 
 
 def checkpoint_sort_key(path: Path) -> float:
+    """Obtiene una clave de ordenamiento para checkpoints.
+
+    Args:
+        path: Ruta del checkpoint.
+
+    Returns:
+        Fecha de modificacion en segundos, o ``0.0`` si no se puede leer.
+    """
     try:
         return path.stat().st_mtime
     except OSError:
@@ -145,6 +236,14 @@ def checkpoint_sort_key(path: Path) -> float:
 
 
 def best_model_from_report(project_root: Path) -> Path | None:
+    """Resuelve el mejor checkpoint usando el reporte de resultados.
+
+    Args:
+        project_root: Ruta raiz del proyecto.
+
+    Returns:
+        Ruta del checkpoint ganador si existe; de lo contrario, ``None``.
+    """
     report_path = project_root / "outputs" / "reports" / "resultados_modelos_obtenidos.csv"
     if not report_path.exists():
         return None
@@ -156,6 +255,14 @@ def best_model_from_report(project_root: Path) -> Path | None:
         return None
 
     def row_key(row: dict[str, str]) -> tuple[float, float, float]:
+        """Calcula la clave de ranking para una fila de metricas.
+
+        Args:
+            row: Fila del CSV de resultados.
+
+        Returns:
+            Tupla con F1 macro, accuracy de prueba y loss invertida.
+        """
         return (
             float(row.get("F1-macro", 0.0)),
             float(row.get("Acc. Test", 0.0)),
@@ -169,6 +276,18 @@ def best_model_from_report(project_root: Path) -> Path | None:
 
 
 def choose_model_path(project_root: Path, explicit_model: str | None) -> Path:
+    """Selecciona el checkpoint que se usara para inferencia.
+
+    Args:
+        project_root: Ruta raiz del proyecto.
+        explicit_model: Ruta indicada por CLI, si existe.
+
+    Returns:
+        Ruta absoluta al checkpoint seleccionado.
+
+    Raises:
+        FileNotFoundError: Si no existe el modelo explicito ni uno resoluble.
+    """
     if explicit_model:
         path = Path(explicit_model)
         if not path.is_absolute():
@@ -193,6 +312,17 @@ def choose_model_path(project_root: Path, explicit_model: str | None) -> Path:
 
 
 def resolve_device(requested: str) -> torch.device:
+    """Resuelve el dispositivo de inferencia solicitado.
+
+    Args:
+        requested: Valor CLI entre ``auto``, ``cpu`` y ``cuda``.
+
+    Returns:
+        Dispositivo de PyTorch seleccionado.
+
+    Raises:
+        RuntimeError: Si se solicita CUDA y no esta disponible.
+    """
     if requested == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if requested == "cuda" and not torch.cuda.is_available():
@@ -201,6 +331,18 @@ def resolve_device(requested: str) -> torch.device:
 
 
 def load_torch_checkpoint(path: Path, device: torch.device) -> dict:
+    """Carga un checkpoint de PyTorch desde disco.
+
+    Args:
+        path: Ruta del archivo ``.pt``.
+        device: Dispositivo de inferencia solicitado.
+
+    Returns:
+        Diccionario almacenado en el checkpoint.
+
+    Raises:
+        TypeError: Si el checkpoint cargado no es un diccionario.
+    """
     try:
         checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     except TypeError:
@@ -212,6 +354,18 @@ def load_torch_checkpoint(path: Path, device: torch.device) -> dict:
 
 
 def load_checkpoint_model(path: Path, device: torch.device) -> tuple[GestureCNN, dict]:
+    """Carga el modelo y sus metadatos desde un checkpoint.
+
+    Args:
+        path: Ruta del checkpoint ``.pt``.
+        device: Dispositivo donde se evaluara el modelo.
+
+    Returns:
+        Tupla con el modelo en modo evaluacion y metadatos de inferencia.
+
+    Raises:
+        KeyError: Si faltan campos obligatorios en el checkpoint.
+    """
     checkpoint = load_torch_checkpoint(path, device)
     required = {"model_key", "class_names", "state_dict"}
     missing = required.difference(checkpoint)
@@ -237,6 +391,14 @@ def load_checkpoint_model(path: Path, device: torch.device) -> tuple[GestureCNN,
 
 
 def skin_mask_from_bgr(roi_bgr: np.ndarray) -> np.ndarray:
+    """Calcula una mascara aproximada de piel para una ROI BGR.
+
+    Args:
+        roi_bgr: Region de interes en formato BGR.
+
+    Returns:
+        Mascara binaria con posibles pixeles de piel.
+    """
     ycrcb = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2YCrCb)
     hsv = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2HSV)
 
@@ -251,6 +413,14 @@ def skin_mask_from_bgr(roi_bgr: np.ndarray) -> np.ndarray:
 
 
 def bright_foreground_fallback(gray: np.ndarray) -> np.ndarray:
+    """Genera una mascara alternativa por brillo.
+
+    Args:
+        gray: Imagen en escala de grises.
+
+    Returns:
+        Mascara binaria del primer plano brillante.
+    """
     threshold = np.percentile(gray, 65)
     mask = np.where(gray >= threshold, 255, 0).astype(np.uint8)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
@@ -258,6 +428,14 @@ def bright_foreground_fallback(gray: np.ndarray) -> np.ndarray:
 
 
 def darken_background(roi_bgr: np.ndarray) -> np.ndarray:
+    """Realza la mano y oscurece el fondo de una ROI.
+
+    Args:
+        roi_bgr: Region de interes en formato BGR.
+
+    Returns:
+        Imagen en escala de grises con fondo atenuado.
+    """
     gray = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     enhanced = clahe.apply(gray)
@@ -275,6 +453,19 @@ def darken_background(roi_bgr: np.ndarray) -> np.ndarray:
 
 
 def preprocess_roi(roi_bgr: np.ndarray, image_size: tuple[int, int], mode: str) -> tuple[torch.Tensor, np.ndarray]:
+    """Preprocesa una ROI para inferencia del modelo.
+
+    Args:
+        roi_bgr: Region de interes capturada desde la webcam.
+        image_size: Tamano de salida como ``(ancho, alto)``.
+        mode: Modo de preprocesamiento: ``raw``, ``otsu`` o ``dark-bg``.
+
+    Returns:
+        Tupla con tensor normalizado para PyTorch y vista previa en grises.
+
+    Raises:
+        ValueError: Si el modo de preprocesamiento no es reconocido.
+    """
     gray = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2GRAY)
 
     if mode == "otsu":
@@ -292,6 +483,15 @@ def preprocess_roi(roi_bgr: np.ndarray, image_size: tuple[int, int], mode: str) 
 
 
 def center_roi(frame_shape: tuple[int, int, int], roi_size: int) -> tuple[int, int, int, int]:
+    """Calcula una ROI cuadrada centrada en el frame.
+
+    Args:
+        frame_shape: Forma del frame capturado por OpenCV.
+        roi_size: Tamano deseado del lado de la ROI.
+
+    Returns:
+        Tupla ``(x, y, ancho, alto)`` de la ROI.
+    """
     height, width = frame_shape[:2]
     size = max(32, min(roi_size, width - 1, height - 1))
     x = (width - size) // 2
@@ -300,6 +500,16 @@ def center_roi(frame_shape: tuple[int, int, int], roi_size: int) -> tuple[int, i
 
 
 def predict_probabilities(model: nn.Module, tensor: torch.Tensor, device: torch.device) -> np.ndarray:
+    """Predice probabilidades de clase para una imagen preprocesada.
+
+    Args:
+        model: Modelo PyTorch en modo inferencia.
+        tensor: Tensor de entrada con una imagen.
+        device: Dispositivo donde ejecutar la inferencia.
+
+    Returns:
+        Arreglo NumPy con probabilidades por clase.
+    """
     with torch.inference_mode():
         logits = model(tensor.to(device))
         probabilities = torch.softmax(logits, dim=1)[0]
@@ -307,11 +517,25 @@ def predict_probabilities(model: nn.Module, tensor: torch.Tensor, device: torch.
 
 
 def draw_text(frame: np.ndarray, text: str, origin: tuple[int, int], scale: float = 0.7) -> None:
+    """Dibuja texto legible sobre un frame.
+
+    Args:
+        frame: Imagen BGR modificada in place.
+        text: Texto a dibujar.
+        origin: Coordenada inferior izquierda del texto.
+        scale: Escala tipografica de OpenCV.
+    """
     cv2.putText(frame, text, origin, cv2.FONT_HERSHEY_SIMPLEX, scale, (0, 0, 0), 4, cv2.LINE_AA)
     cv2.putText(frame, text, origin, cv2.FONT_HERSHEY_SIMPLEX, scale, (255, 255, 255), 2, cv2.LINE_AA)
 
 
 def draw_preview(frame: np.ndarray, preview_gray: np.ndarray) -> None:
+    """Dibuja la vista previa preprocesada sobre el frame.
+
+    Args:
+        frame: Imagen BGR modificada in place.
+        preview_gray: ROI preprocesada en escala de grises.
+    """
     preview = cv2.resize(preview_gray, (120, 120), interpolation=cv2.INTER_NEAREST)
     preview_bgr = cv2.cvtColor(preview, cv2.COLOR_GRAY2BGR)
     top = 12
@@ -321,6 +545,14 @@ def draw_preview(frame: np.ndarray, preview_gray: np.ndarray) -> None:
 
 
 def run_smoke_test(args: argparse.Namespace) -> None:
+    """Ejecuta una inferencia sintetica sin abrir la webcam.
+
+    Args:
+        args: Argumentos parseados desde CLI.
+
+    Raises:
+        RuntimeError: Si la salida del modelo no coincide con las clases esperadas.
+    """
     project_root = project_root_from_script()
     device = resolve_device(args.device)
     model_path = choose_model_path(project_root, args.model)
@@ -344,6 +576,14 @@ def run_smoke_test(args: argparse.Namespace) -> None:
 
 
 def run_webcam(args: argparse.Namespace) -> None:
+    """Ejecuta el reconocimiento de gestos en tiempo real con webcam.
+
+    Args:
+        args: Argumentos parseados desde CLI.
+
+    Raises:
+        RuntimeError: Si la camara no abre o no entrega frames.
+    """
     project_root = project_root_from_script()
     device = resolve_device(args.device)
     model_path = choose_model_path(project_root, args.model)
@@ -414,6 +654,11 @@ def run_webcam(args: argparse.Namespace) -> None:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """Construye el parser de argumentos de linea de comandos.
+
+    Returns:
+        Parser configurado para el script de inferencia.
+    """
     parser = argparse.ArgumentParser(
         description="Reconocimiento de gestos de mano en tiempo real con OpenCV y PyTorch."
     )
@@ -440,6 +685,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """Punto de entrada del script CLI."""
     parser = build_arg_parser()
     args = parser.parse_args()
 

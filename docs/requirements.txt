@@ -1,0 +1,7 @@
+sphinx
+docutils<0.22
+furo
+myst-parser
+nbsphinx
+nbsphinx-link
+ipython

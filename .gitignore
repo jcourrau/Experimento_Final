@@ -1,3 +1,6 @@
 data/
+!docs/data/
+!docs/data/*.csv
 .vevn/
 notebooks/.env
+docs/_build/
