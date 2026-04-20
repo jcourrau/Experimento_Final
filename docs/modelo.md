@@ -25,4 +25,4 @@ outputs/models/gesture_recognition_(cnn_b).pt
 .\.venv\Scripts\python.exe scripts\realtime_gesture_recognition.py --model "outputs\models\gesture_recognition_(cnn_b).pt" --preprocess raw
 ```
 
-Este modelo corresponde a la arquitectura seleccionada para las pruebas de inferencia. Su uso permite reproducir el pipeline de reconocimiento con la misma configuracion empleada en el experimento final.
+Este modelo corresponde a la arquitectura seleccionada para las pruebas de inferencia. Su uso permite reproducir el pipeline de reconocimiento con la misma configuración empleada en el experimento final.

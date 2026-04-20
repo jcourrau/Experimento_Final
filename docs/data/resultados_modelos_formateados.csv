@@ -1,4 +1,4 @@
-Modelo,Exactitud validacion,Exactitud prueba,F1 macro,Perdida
+Modelo,Exactitud validación,Exactitud prueba,F1 macro,Pérdida
 CNN-A,100 %,99.967 %,99.967 %,0.002
 CNN-B,100 %,99.967 %,99.967 %,0.002
 CNN-C,100 %,99.9 %,99.9 %,0.006

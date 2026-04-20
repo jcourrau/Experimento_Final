@@ -1,4 +1,4 @@
-Clase,Precision,Recall,F1
+Clase,Precisión,Recall,F1
 palm,100 %,99.667 %,99.833 %
 l,100 %,100 %,100 %
 fist,99.668 %,100 %,99.834 %

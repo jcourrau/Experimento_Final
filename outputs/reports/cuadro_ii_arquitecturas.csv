@@ -1,4 +1,4 @@
 Modelo,Convoluciones,Batch Normalization,Dropout
 CNN-Base (A),3,No,-
 CNN-Interm. (B),5,No,0.3
-CNN-Propuesta (C),5,Si,0.4
+CNN-Propuesta (C),5,Sí,0.4

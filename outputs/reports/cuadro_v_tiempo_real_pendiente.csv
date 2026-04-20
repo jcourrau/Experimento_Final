@@ -1,5 +1,4 @@
-Metrica,Valor
-Tasa de inferencia (FPS),Pendiente: segunda parte con camara
-Latencia promedio (ms),Pendiente: segunda parte con camara
-Precision en tiempo real,Pendiente: segunda parte con camara
-Reduccion vs. dataset estatico,Pendiente: segunda parte con camara
+Métrica,Valor
+Tasa de inferencia (FPS), 24 FPS
+Latencia promedio (ms), Sin latencia observada
+Precisión en tiempo real, >10%

@@ -9,7 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-project = "Clasificacion de Gestos de Mano con CNN"
+project = "Clasificación de Gestos de Mano con CNN"
 author = "Luis Gabriel Corrales Mora, Jason Courrau Madrigal"
 copyright = "2026, Luis Gabriel Corrales Mora, Jason Courrau Madrigal"
 

@@ -52,7 +52,7 @@ class ConvBlock(nn.Module):
             in_channels: Cantidad de canales de entrada.
             out_channels: Cantidad de filtros de salida.
             convs: Cantidad de convoluciones consecutivas en el bloque.
-            use_bn: Indica si se agrega Batch Normalization tras cada convolucion.
+            use_bn: Indica si se agrega Batch Normalization tras cada convolución.
         """
         super().__init__()
 
@@ -80,7 +80,7 @@ class ConvBlock(nn.Module):
 
 
 class GestureCNN(nn.Module):
-    """Red convolucional para clasificacion de gestos de mano."""
+    """Red convolucional para clasificación de gestos de mano."""
 
     def __init__(self, model_key: str, num_classes: int, image_size: tuple[int, int]):
         """Inicializa la arquitectura CNN seleccionada.
@@ -88,7 +88,7 @@ class GestureCNN(nn.Module):
         Args:
             model_key: Identificador de arquitectura definido en ``MODEL_CONFIGS``.
             num_classes: Cantidad de clases de gestos a predecir.
-            image_size: Tamano de imagen esperado como ``(ancho, alto)``.
+            image_size: Tamaño de imagen esperado como ``(ancho, alto)``.
 
         Raises:
             ValueError: Si ``model_key`` no corresponde a una arquitectura conocida.
@@ -120,7 +120,7 @@ class GestureCNN(nn.Module):
 
     @staticmethod
     def _build_features(blocks: list[dict]) -> nn.Sequential:
-        """Construye el extractor convolucional de caracteristicas.
+        """Construye el extractor convolucional de características.
 
         Args:
             blocks: Lista de configuraciones de bloques convolucionales.
@@ -145,20 +145,20 @@ class GestureCNN(nn.Module):
         return nn.Sequential(*layers)
 
     def _get_flattened_size(self) -> int:
-        """Calcula la dimension plana que entra al clasificador.
+        """Calcula la dimensión plana que entra al clasificador.
 
         Returns:
-            Cantidad de caracteristicas despues del extractor convolucional.
+            Cantidad de características después del extractor convolucional.
         """
         with torch.no_grad():
             dummy = torch.zeros(1, 1, self.image_size[1], self.image_size[0])
             return self.features(dummy).view(1, -1).shape[1]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Calcula logits de clase para un lote de imagenes.
+        """Calcula logits de clase para un lote de imágenes.
 
         Args:
-            x: Tensor de imagenes con forma ``(batch, channels, height, width)``.
+            x: Tensor de imágenes con forma ``(batch, channels, height, width)``.
 
         Returns:
             Tensor de logits con una columna por clase.
@@ -179,7 +179,7 @@ def normalize_model_key(model_key: str) -> str:
 
 
 def display_model_key(model_key: str) -> str:
-    """Convierte un identificador de modelo al formato de presentacion.
+    """Convierte un identificador de modelo al formato de presentación.
 
     Args:
         model_key: Nombre de modelo a mostrar.
@@ -191,10 +191,10 @@ def display_model_key(model_key: str) -> str:
 
 
 def parse_image_size(value) -> tuple[int, int]:
-    """Convierte el tamano de imagen del checkpoint a una tupla.
+    """Convierte el tamaño de imagen del checkpoint a una tupla.
 
     Args:
-        value: Valor de tamano almacenado en el checkpoint.
+        value: Valor de tamaño almacenado en el checkpoint.
 
     Returns:
         Tupla ``(ancho, alto)`` usada por OpenCV.
@@ -208,14 +208,14 @@ def parse_image_size(value) -> tuple[int, int]:
         value = value.detach().cpu().tolist()
     if isinstance(value, (list, tuple)) and len(value) == 2:
         return int(value[0]), int(value[1])
-    raise ValueError(f"image_size invalido en checkpoint: {value!r}")
+    raise ValueError(f"image_size inválido en checkpoint: {value!r}")
 
 
 def project_root_from_script() -> Path:
-    """Obtiene la raiz del proyecto desde la ubicacion del script.
+    """Obtiene la raíz del proyecto desde la ubicación del script.
 
     Returns:
-        Ruta absoluta del directorio raiz del repositorio.
+        Ruta absoluta del directorio raíz del repositorio.
     """
     return Path(__file__).resolve().parents[1]
 
@@ -227,7 +227,7 @@ def checkpoint_sort_key(path: Path) -> float:
         path: Ruta del checkpoint.
 
     Returns:
-        Fecha de modificacion en segundos, o ``0.0`` si no se puede leer.
+        Fecha de modificación en segundos, o ``0.0`` si no se puede leer.
     """
     try:
         return path.stat().st_mtime
@@ -239,7 +239,7 @@ def best_model_from_report(project_root: Path) -> Path | None:
     """Resuelve el mejor checkpoint usando el reporte de resultados.
 
     Args:
-        project_root: Ruta raiz del proyecto.
+        project_root: Ruta raíz del proyecto.
 
     Returns:
         Ruta del checkpoint ganador si existe; de lo contrario, ``None``.
@@ -255,7 +255,7 @@ def best_model_from_report(project_root: Path) -> Path | None:
         return None
 
     def row_key(row: dict[str, str]) -> tuple[float, float, float]:
-        """Calcula la clave de ranking para una fila de metricas.
+        """Calcula la clave de ranking para una fila de métricas.
 
         Args:
             row: Fila del CSV de resultados.
@@ -276,17 +276,17 @@ def best_model_from_report(project_root: Path) -> Path | None:
 
 
 def choose_model_path(project_root: Path, explicit_model: str | None) -> Path:
-    """Selecciona el checkpoint que se usara para inferencia.
+    """Selecciona el checkpoint que se usará para inferencia.
 
     Args:
-        project_root: Ruta raiz del proyecto.
+        project_root: Ruta raíz del proyecto.
         explicit_model: Ruta indicada por CLI, si existe.
 
     Returns:
         Ruta absoluta al checkpoint seleccionado.
 
     Raises:
-        FileNotFoundError: Si no existe el modelo explicito ni uno resoluble.
+        FileNotFoundError: Si no existe el modelo explícito ni uno resoluble.
     """
     if explicit_model:
         path = Path(explicit_model)
@@ -306,7 +306,7 @@ def choose_model_path(project_root: Path, explicit_model: str | None) -> Path:
         return report_model
 
     raise FileNotFoundError(
-        "No encontre un checkpoint exportado en outputs/models/gesture_recognition_(*).pt "
+        "No encontré un checkpoint exportado en outputs/models/gesture_recognition_(*).pt "
         "ni un *_best.pt resoluble desde outputs/reports/resultados_modelos_obtenidos.csv."
     )
 
@@ -321,12 +321,12 @@ def resolve_device(requested: str) -> torch.device:
         Dispositivo de PyTorch seleccionado.
 
     Raises:
-        RuntimeError: Si se solicita CUDA y no esta disponible.
+        RuntimeError: Si se solicita CUDA y no está disponible.
     """
     if requested == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if requested == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("Se pidio --device cuda, pero PyTorch no detecta CUDA.")
+        raise RuntimeError("Se pidió --device cuda, pero PyTorch no detecta CUDA.")
     return torch.device(requested)
 
 
@@ -358,10 +358,10 @@ def load_checkpoint_model(path: Path, device: torch.device) -> tuple[GestureCNN,
 
     Args:
         path: Ruta del checkpoint ``.pt``.
-        device: Dispositivo donde se evaluara el modelo.
+        device: Dispositivo donde se evaluará el modelo.
 
     Returns:
-        Tupla con el modelo en modo evaluacion y metadatos de inferencia.
+        Tupla con el modelo en modo evaluación y metadatos de inferencia.
 
     Raises:
         KeyError: Si faltan campos obligatorios en el checkpoint.
@@ -391,13 +391,13 @@ def load_checkpoint_model(path: Path, device: torch.device) -> tuple[GestureCNN,
 
 
 def skin_mask_from_bgr(roi_bgr: np.ndarray) -> np.ndarray:
-    """Calcula una mascara aproximada de piel para una ROI BGR.
+    """Calcula una máscara aproximada de piel para una ROI BGR.
 
     Args:
-        roi_bgr: Region de interes en formato BGR.
+        roi_bgr: Región de interés en formato BGR.
 
     Returns:
-        Mascara binaria con posibles pixeles de piel.
+        Máscara binaria con posibles píxeles de piel.
     """
     ycrcb = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2YCrCb)
     hsv = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2HSV)
@@ -413,13 +413,13 @@ def skin_mask_from_bgr(roi_bgr: np.ndarray) -> np.ndarray:
 
 
 def bright_foreground_fallback(gray: np.ndarray) -> np.ndarray:
-    """Genera una mascara alternativa por brillo.
+    """Genera una máscara alternativa por brillo.
 
     Args:
         gray: Imagen en escala de grises.
 
     Returns:
-        Mascara binaria del primer plano brillante.
+        Máscara binaria del primer plano brillante.
     """
     threshold = np.percentile(gray, 65)
     mask = np.where(gray >= threshold, 255, 0).astype(np.uint8)
@@ -431,7 +431,7 @@ def darken_background(roi_bgr: np.ndarray) -> np.ndarray:
     """Realza la mano y oscurece el fondo de una ROI.
 
     Args:
-        roi_bgr: Region de interes en formato BGR.
+        roi_bgr: Región de interés en formato BGR.
 
     Returns:
         Imagen en escala de grises con fondo atenuado.
@@ -456,8 +456,8 @@ def preprocess_roi(roi_bgr: np.ndarray, image_size: tuple[int, int], mode: str) 
     """Preprocesa una ROI para inferencia del modelo.
 
     Args:
-        roi_bgr: Region de interes capturada desde la webcam.
-        image_size: Tamano de salida como ``(ancho, alto)``.
+        roi_bgr: Región de interés capturada desde la webcam.
+        image_size: Tamaño de salida como ``(ancho, alto)``.
         mode: Modo de preprocesamiento: ``raw``, ``otsu`` o ``dark-bg``.
 
     Returns:
@@ -487,7 +487,7 @@ def center_roi(frame_shape: tuple[int, int, int], roi_size: int) -> tuple[int, i
 
     Args:
         frame_shape: Forma del frame capturado por OpenCV.
-        roi_size: Tamano deseado del lado de la ROI.
+        roi_size: Tamaño deseado del lado de la ROI.
 
     Returns:
         Tupla ``(x, y, ancho, alto)`` de la ROI.
@@ -523,7 +523,7 @@ def draw_text(frame: np.ndarray, text: str, origin: tuple[int, int], scale: floa
         frame: Imagen BGR modificada in place.
         text: Texto a dibujar.
         origin: Coordenada inferior izquierda del texto.
-        scale: Escala tipografica de OpenCV.
+        scale: Escala tipográfica de OpenCV.
     """
     cv2.putText(frame, text, origin, cv2.FONT_HERSHEY_SIMPLEX, scale, (0, 0, 0), 4, cv2.LINE_AA)
     cv2.putText(frame, text, origin, cv2.FONT_HERSHEY_SIMPLEX, scale, (255, 255, 255), 2, cv2.LINE_AA)
@@ -545,7 +545,7 @@ def draw_preview(frame: np.ndarray, preview_gray: np.ndarray) -> None:
 
 
 def run_smoke_test(args: argparse.Namespace) -> None:
-    """Ejecuta una inferencia sintetica sin abrir la webcam.
+    """Ejecuta una inferencia sintética sin abrir la webcam.
 
     Args:
         args: Argumentos parseados desde CLI.
@@ -582,7 +582,7 @@ def run_webcam(args: argparse.Namespace) -> None:
         args: Argumentos parseados desde CLI.
 
     Raises:
-        RuntimeError: Si la camara no abre o no entrega frames.
+        RuntimeError: Si la cámara no abre o no entrega frames.
     """
     project_root = project_root_from_script()
     device = resolve_device(args.device)
@@ -592,7 +592,7 @@ def run_webcam(args: argparse.Namespace) -> None:
     backend = cv2.CAP_DSHOW if os.name == "nt" else cv2.CAP_ANY
     camera = cv2.VideoCapture(args.camera, backend)
     if not camera.isOpened():
-        raise RuntimeError(f"No se pudo abrir la camara {args.camera}.")
+        raise RuntimeError(f"No se pudo abrir la cámara {args.camera}.")
 
     history: deque[np.ndarray] = deque(maxlen=max(1, args.smooth_window))
     fps = 0.0
@@ -611,7 +611,7 @@ def run_webcam(args: argparse.Namespace) -> None:
         while True:
             ok, frame = camera.read()
             if not ok:
-                raise RuntimeError("No se pudo leer un frame de la camara.")
+                raise RuntimeError("No se pudo leer un frame de la cámara.")
 
             if not args.no_mirror:
                 frame = cv2.flip(frame, 1)
@@ -654,7 +654,7 @@ def run_webcam(args: argparse.Namespace) -> None:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    """Construye el parser de argumentos de linea de comandos.
+    """Construye el parser de argumentos de línea de comandos.
 
     Returns:
         Parser configurado para el script de inferencia.
@@ -663,7 +663,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         description="Reconocimiento de gestos de mano en tiempo real con OpenCV y PyTorch."
     )
     parser.add_argument("--model", type=str, default=None, help="Ruta al checkpoint .pt.")
-    parser.add_argument("--camera", type=int, default=0, help="Indice de la camara web.")
+    parser.add_argument("--camera", type=int, default=0, help="Índice de la cámara web.")
     parser.add_argument(
         "--device",
         choices=["auto", "cpu", "cuda"],
@@ -678,9 +678,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--confidence-threshold", type=float, default=0.60, help="Umbral para mostrar una clase.")
     parser.add_argument("--smooth-window", type=int, default=7, help="Cantidad de frames para suavizar.")
-    parser.add_argument("--roi-size", type=int, default=260, help="Tamano del cuadro ROI en pixeles.")
+    parser.add_argument("--roi-size", type=int, default=260, help="Tamaño del cuadro ROI en píxeles.")
     parser.add_argument("--no-mirror", action="store_true", help="No invertir horizontalmente la webcam.")
-    parser.add_argument("--smoke-test", action="store_true", help="Cargar el modelo y probar una inferencia sin camara.")
+    parser.add_argument("--smoke-test", action="store_true", help="Cargar el modelo y probar una inferencia sin cámara.")
     return parser
 
 
